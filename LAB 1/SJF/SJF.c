@@ -7,7 +7,7 @@ int main(){
     int n, temp;
     int AT[MAX], BT[MAX], CT[MAX], TAT[MAX], WT[MAX], RT[MAX], order[MAX];
 
-    printf("\n -- FCFS CPU SCHEDULING PROGRAM --");
+    printf("\n -- SJF CPU SCHEDULING PROGRAM --");
     printf("\n\n Enter the number of processes(max 10): ");
     scanf("%d", &n);
 
@@ -30,9 +30,10 @@ int main(){
         printf(" BT[%d]: ",(i+1));
         scanf("%d", &BT[i]);
         order[i] = i;
+        CT[i] = 0;
     }
 
-    //ORDER BY FIRST ARRIVAL TIME
+    //ORDER BY INCREASING ARRIVAL TIME
     for(int i=0; i<n; i++){
         for(int j=(n-1); j>i; j--){
             if(AT[j]<AT[i]){
@@ -41,17 +42,23 @@ int main(){
                 temp = order[i]; order[i] = order[j]; order[j] = temp;
     }   }   }
 
-    //Calculate CT
+    int currentTime=0, sj, index;
+    //Calculate CT, TAT, WT, RT
     for(int i=0; i<n; i++){
-        if(CT[i-1]>AT[i] && i){
-            CT[i] = CT[i-1] + BT[i];
-            RT[i] = CT[i-1] - AT[i];
-        }else{
-            CT[i] = AT[i] + BT[i];
-            RT[i] = 0;
+
+        //FINDING SHORTEST ARRIVED JOB
+        sj = 9999;
+        for(int j=0; j<n; j++){
+            if(!CT[j] && AT[j]<=currentTime && BT[j]<sj){
+                sj = BT[j];
+                index = j;
+            }
         }
-        TAT[i] = CT[i] - AT[i];
-        WT[i] = TAT[i] - BT[i];
+        CT[index] = currentTime + BT[index];
+        RT[index] = currentTime - AT[index];
+        currentTime += BT[index];
+        TAT[index] = CT[index] - AT[index];
+        WT[index] = TAT[index] - BT[index];
     }
 
     //ORDER BACK
@@ -92,3 +99,4 @@ int main(){
     printf("\n Average Response time(TAT): %.2f\n\n", avgRT);
     return 0;
 }
+

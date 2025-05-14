@@ -5,9 +5,9 @@
 
 int main(){
     int n, temp;
-    int AT[MAX], BT[MAX], CT[MAX], TAT[MAX], WT[MAX], RT[MAX], order[MAX];
+    int AT[MAX], BT[MAX], BT1[MAX], CT[MAX], TAT[MAX], WT[MAX], RT[MAX], priority[MAX], order[MAX];
 
-    printf("\n -- FCFS CPU SCHEDULING PROGRAM --");
+    printf("\n -- PRIORITY(PRE) CPU SCHEDULING PROGRAM --");
     printf("\n\n Enter the number of processes(max 10): ");
     scanf("%d", &n);
 
@@ -29,10 +29,23 @@ int main(){
     for(int i=0; i<n; i++){
         printf(" BT[%d]: ",(i+1));
         scanf("%d", &BT[i]);
-        order[i] = i;
     }
 
-    //ORDER BY FIRST ARRIVAL TIME
+    printf("\n Enter the Priorities: \n");
+    for(int i=0; i<n; i++){
+        printf(" Priority[%d]: ",(i+1));
+        scanf("%d", &priority[i]);
+    }
+
+    //Initialize values properly
+    for(int i=0; i<n; i++){
+        BT1[i] = BT[i];
+        order[i] = i;
+        CT[i] = 0;
+        RT[i] = -1;
+    }
+
+    //ORDER BY INCREASING ARRIVAL TIME
     for(int i=0; i<n; i++){
         for(int j=(n-1); j>i; j--){
             if(AT[j]<AT[i]){
@@ -41,25 +54,33 @@ int main(){
                 temp = order[i]; order[i] = order[j]; order[j] = temp;
     }   }   }
 
-    //Calculate CT
-    for(int i=0; i<n; i++){
-        if(CT[i-1]>AT[i] && i){
-            CT[i] = CT[i-1] + BT[i];
-            RT[i] = CT[i-1] - AT[i];
-        }else{
-            CT[i] = AT[i] + BT[i];
-            RT[i] = 0;
+    int completed = 0, currentTime = 0, minPriority, index;
+    while(completed < n){
+        minPriority = 9999;
+        for(int j=0; j<n; j++){
+            if(BT[j] && AT[j]<=currentTime && priority[j]<minPriority){
+                minPriority = priority[j];
+                index = j;
+            }
         }
-        TAT[i] = CT[i] - AT[i];
-        WT[i] = TAT[i] - BT[i];
+        if(!(--BT[index])){
+            completed++;
+            CT[index] = currentTime + 1;
+        }
+        if(RT[index]==-1){
+            RT[index] = currentTime - AT[index];
+        }
+        TAT[index] = CT[index] - AT[index];
+        WT[index] = TAT[index] - BT1[order[index]];
+        currentTime++;
     }
-
     //ORDER BACK
     for(int i=0; i<n; i++){
         for(int j=(n-1); j>i; j--){
             if(order[j]<order[i]){
                 temp = AT[i]; AT[i] = AT[j]; AT[j] = temp;
                 temp = BT[i]; BT[i] = BT[j]; BT[j] = temp;
+                temp = priority[i]; priority[i] = priority[j]; priority[j] = temp;
                 temp = CT[i]; CT[i] = CT[j]; CT[j] = temp;
                 temp = TAT[i]; TAT[i] = TAT[j]; TAT[j] = temp;
                 temp = WT[i]; WT[i] = WT[j]; WT[j] = temp;
@@ -69,13 +90,13 @@ int main(){
 
     //OUTPUT RESULTS CORRECTLY
     printf("\n\n\n -- RESULT TABLE -- \n\a");
-    printf(" +-----------+------+------+------+-------+------+------+\n");
-    printf(" |  Process  |  AT  |  BT  |  CT  |  TAT  |  WT  |  RT  |\n");
-    printf(" +-----------+------+------+------+-------+------+------+\n");
+    printf(" +-----------+------+------+------------+------+-------+------+------+\n");
+    printf(" |  Process  |  AT  |  BT  |  Priority  |  CT  |  TAT  |  WT  |  RT  |\n");
+    printf(" +-----------+------+------+------------+------+-------+------+------+\n");
     for(int i=0; i<n; i++){
-        printf(" |  P%d\t     |%4d  |%4d  |%4d  |%5d  |%4d  |%4d  |\n", (i+1), AT[i], BT[i], CT[i], TAT[i], WT[i], RT[i]);
+        printf(" |  P%d\t     |%4d  |%4d  |%10d  |%4d  |%5d  |%4d  |%4d  |\n", (i+1), AT[i], BT1[i], priority[i], CT[i], TAT[i], WT[i], RT[i]);
     }
-    printf(" +-----------+------+------+------+-------+------+------+\n");
+    printf(" +-----------+------+------+------------+------+-------+------+------+\n");
 
     float avgTAT=0.0, avgWT=0.0, avgRT=0.0;
     for(int i=0; i<n; i++){

@@ -5,9 +5,9 @@
 
 int main(){
     int n, temp;
-    int AT[MAX], BT[MAX], CT[MAX], TAT[MAX], WT[MAX], RT[MAX], order[MAX];
+    int AT[MAX], BT[MAX], BT1[MAX], CT[MAX], TAT[MAX], WT[MAX], RT[MAX], order[MAX];
 
-    printf("\n -- FCFS CPU SCHEDULING PROGRAM --");
+    printf("\n -- SRTF CPU SCHEDULING PROGRAM --");
     printf("\n\n Enter the number of processes(max 10): ");
     scanf("%d", &n);
 
@@ -29,10 +29,17 @@ int main(){
     for(int i=0; i<n; i++){
         printf(" BT[%d]: ",(i+1));
         scanf("%d", &BT[i]);
-        order[i] = i;
     }
 
-    //ORDER BY FIRST ARRIVAL TIME
+    //Initialize values properly
+    for(int i=0; i<n; i++){
+        BT1[i] = BT[i];
+        order[i] = i;
+        CT[i] = 0;
+        RT[i] = -1;
+    }
+
+    //ORDER BY INCREASING ARRIVAL TIME
     for(int i=0; i<n; i++){
         for(int j=(n-1); j>i; j--){
             if(AT[j]<AT[i]){
@@ -41,19 +48,26 @@ int main(){
                 temp = order[i]; order[i] = order[j]; order[j] = temp;
     }   }   }
 
-    //Calculate CT
-    for(int i=0; i<n; i++){
-        if(CT[i-1]>AT[i] && i){
-            CT[i] = CT[i-1] + BT[i];
-            RT[i] = CT[i-1] - AT[i];
-        }else{
-            CT[i] = AT[i] + BT[i];
-            RT[i] = 0;
+    int completed = 0, currentTime = 0, sj, index;
+    while(completed < n){
+        sj = 9999;
+        for(int j=0; j<n; j++){
+            if(BT[j] && AT[j]<=currentTime && BT[j]<sj){
+                sj = BT[j];
+                index = j;
+            }
         }
-        TAT[i] = CT[i] - AT[i];
-        WT[i] = TAT[i] - BT[i];
+        if(!(--BT[index])){
+            completed++;
+            CT[index] = currentTime + 1;
+        }
+        if(RT[index]==-1){
+            RT[index] = currentTime - AT[index];
+        }
+        TAT[index] = CT[index] - AT[index];
+        WT[index] = TAT[index] - BT1[order[index]];
+        currentTime++;
     }
-
     //ORDER BACK
     for(int i=0; i<n; i++){
         for(int j=(n-1); j>i; j--){
@@ -73,7 +87,7 @@ int main(){
     printf(" |  Process  |  AT  |  BT  |  CT  |  TAT  |  WT  |  RT  |\n");
     printf(" +-----------+------+------+------+-------+------+------+\n");
     for(int i=0; i<n; i++){
-        printf(" |  P%d\t     |%4d  |%4d  |%4d  |%5d  |%4d  |%4d  |\n", (i+1), AT[i], BT[i], CT[i], TAT[i], WT[i], RT[i]);
+        printf(" |  P%d\t     |%4d  |%4d  |%4d  |%5d  |%4d  |%4d  |\n", (i+1), AT[i], BT1[i], CT[i], TAT[i], WT[i], RT[i]);
     }
     printf(" +-----------+------+------+------+-------+------+------+\n");
 
@@ -92,3 +106,5 @@ int main(){
     printf("\n Average Response time(TAT): %.2f\n\n", avgRT);
     return 0;
 }
+
+
